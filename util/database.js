@@ -1,13 +1,11 @@
 //importing sequelize library
-const mysql = require('mysql2')
+const Sequelize = require("sequelize");
 
-//Create pool is a function to create a pool of connections (queries) to SQL
-const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    database: 'node-complete',
-    password: '262800'
-})
+//Creating a sequelize instance (db name, user, password)
+const sequelize = new Sequelize("node-complete", "root", "262800", {
+  dialect: "mysql",
+  host: "localhost",
+});
 
-//exporting the pool with a promise with a structured way
-module.exports = pool.promise();
+//exporting sequelize
+module.exports = sequelize;
