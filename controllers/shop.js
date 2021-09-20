@@ -4,11 +4,10 @@ const Cart = require("../models/cart");
 
 //Controller get to list the products
 exports.getProducts = (req, res, next) => {
-  // Getting all the products are in the DB
-  Product.fetchAll()
-    .then(([rows, fieldData]) => {
+  Product.findAll()
+    .then((products) => {
       res.render("shop/product-list", {
-        prods: rows,
+        prods: products,
         pageTitle: "All Products",
         path: "/products",
       });
@@ -21,33 +20,40 @@ exports.getProducts = (req, res, next) => {
 //Controller get, to get the product ID
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId;
-  Product.findById(prodId)
-    .then(([product]) => {
+  // Product.findAll({ where: { id: prodId } })
+  //   .then((products) => {
+  //     res.render("shop/product-detail", {
+  //       product: products[0],
+  //       pageTitle: products[0].title,
+  //       path: "/products",
+  //     });
+  //   })
+  //   .catch((err) => {
+  //     console.log(err);
+  //   });
+  Product.findByPk(prodId)
+    .then(product => {
       res.render("shop/product-detail", {
-        product: product[0],
-        pageTitle: "Product",
+        product: product,
+        pageTitle: product.title,
         path: "/products",
       });
     })
     .catch((err) => {
-      console(err);
+      console.log(err);
     });
 };
 
 //Controller get to list the products
 exports.getIndex = (req, res, next) => {
-  // Getting all the products are in the DB
-  Product.fetchAll(() => {})
-    //Using destructuting to send database product registers (rows) to the view
-    .then(([rows, fieldData]) => {
-      //Render é um função do express.js que renderiza o template engine setado na página principal (no nosso caso o handlebars)
+  Product.findAll()
+    .then((products) => {
       res.render("shop/index", {
-        prods: rows,
-        pageTitle: "Shop",
+        prods: products,
+        pageTitle: "Products",
         path: "/",
       });
     })
-    //If error
     .catch((err) => {
       console.log(err);
     });

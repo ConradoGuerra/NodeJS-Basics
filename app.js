@@ -8,8 +8,8 @@ const path = require("path");
 
 const app = express();
 
-// Importing database
-const db = require("./util/database");
+// Importing database with sequelize
+const sequelize = require("./util/database");
 
 //Setando no express a template engine EJS como a padrão
 app.set("view engine", "ejs");
@@ -42,8 +42,18 @@ app.use(shopRoutes);
 //Em caso de página não encontrada
 app.use(errorController.get404);
 
+//Sync is a function to create the tables if they are not created and then connect to server
+sequelize
+  .sync()
+  .then((result) => {
+    // console.log(result);
+    app.listen(3000);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
+
 //substituindo o create server
-app.listen(3000);
 
 // const server = http.createServer(app);
 

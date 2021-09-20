@@ -16,13 +16,15 @@ exports.postAddProduct = (req, res) => {
   const description = req.body.description;
   const price = req.body.price;
 
-  //Creating a new instance of the book's name
-  const product = new Product(null, title, imageUrl, description, price);
-  //Pushing the title into an array
-  product
-    .save()
-    .then(() => {
-      //Quando o usuário acessa a rota product, ela é redirecionada à raiz
+  Product.create({
+    title: title,
+    price: price,
+    imageUrl: imageUrl,
+    description: description,
+  })
+    .then((result) => {
+      // console.log(result);
+      console.log("Created Product");
       res.redirect("/");
     })
     .catch((err) => {
@@ -41,20 +43,24 @@ exports.getEditProduct = (req, res, next) => {
   //Get the param sent with get
   const prodId = req.params.productId;
 
-  //Searching the id
-  Product.findById(prodId, (product) => {
-    if (!product) {
-      return res.redirect("/");
-    }
+  //Searching the id findByPk is a method of sequelize to search a register with where clause
+  Product.findByPk(prodId)
+    .then((product) => {
+      if (!product) {
+        return res.redirect("/");
+      }
 
-    //if id exists
-    res.render("admin/edit-product", {
-      pageTitle: "Edit Product",
-      path: "/admin/edit-product",
-      editing: editMode,
-      product: product,
+      //if id exists
+      res.render("admin/edit-product", {
+        pageTitle: "Edit Product",
+        path: "/admin/edit-product",
+        editing: editMode,
+        product: product,
+      });
+    })
+    .catch((err) => {
+      console.log(err);
     });
-  });
 };
 
 exports.postEditProduct = (req, res, next) => {
@@ -64,31 +70,50 @@ exports.postEditProduct = (req, res, next) => {
   const updatedDescription = req.body.description;
   const updatedPrice = req.body.price;
 
-  const updatedProduct = new Product(
-    prodId,
-    updatedTitle,
-    updatedImageUrl,
-    updatedDescription,
-    updatedPrice
-  );
-  updatedProduct.save();
-
-  res.redirect("/admin/products");
+  Product.findByPk(prodId)
+    .then((product) => {
+      (product.title = updatedTitle),
+        (product.imageUrl = updatedImageUrl),
+        (product.description = updatedDescription),
+        (product.price = updatedPrice);
+      //Returning the update statement
+      return product.save();
+    })
+    //If the save method was succeed
+    .then((result) => {
+      console.log("Updated Product");
+      res.redirect("/admin/products");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.fetchAll((products) => {
-    //Render é um função do express.js que renderiza o template engine setado na página principal (no nosso caso o handlebars)
-    res.render("admin/products", {
-      prods: products,
-      pageTitle: "Admin Products",
-      path: "/admin/products",
+  Product.findAll()
+    .then((products) => {
+      res.render("admin/products", {
+        prods: products,
+        pageTitle: "Admin Products",
+        path: "/admin/products",
+      });
+    })
+    .catch((err) => {
+      console.log(err);
     });
-  });
 };
 
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  Product.deleteById(prodId);
-  res.redirect("/admin/products");
+  Product.findByPk(prodId)
+    .then((product) => {
+      return product.destroy();
+    })
+    .then((result) => {
+      console.log("Deleted Product");
+      res.redirect("/admin/products");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 };
