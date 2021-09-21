@@ -15,13 +15,16 @@ exports.postAddProduct = (req, res) => {
   const imageUrl = req.body.imageUrl;
   const description = req.body.description;
   const price = req.body.price;
-
-  Product.create({
-    title: title,
-    price: price,
-    imageUrl: imageUrl,
-    description: description,
-  })
+  //As  I declare in app.js that products belongs do user, a product has many users
+  // Now I can use the createProduct method to create a product with userId as foreingKey without expressing that in function
+  req.user
+    //With the sequelize association i can use special methods of associated (products belongs to user)
+    .createProduct({
+      title: title,
+      price: price,
+      imageUrl: imageUrl,
+      description: description,
+    })
     .then((result) => {
       // console.log(result);
       console.log("Created Product");
@@ -43,9 +46,13 @@ exports.getEditProduct = (req, res, next) => {
   //Get the param sent with get
   const prodId = req.params.productId;
 
-  //Searching the id findByPk is a method of sequelize to search a register with where clause
-  Product.findByPk(prodId)
-    .then((product) => {
+  //Sequelize association
+  req.user
+    .getProducts({ where: { id: prodId } })
+    //Searching the id findByPk is a method of sequelize to search a register with where clause
+    // Product.findByPk(prodId)
+    .then((products) => {
+      const product = products[0]
       if (!product) {
         return res.redirect("/");
       }
@@ -90,7 +97,8 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  //I only want the products from the exactly user, not all
+  req.user.getProducts()
     .then((products) => {
       res.render("admin/products", {
         prods: products,
