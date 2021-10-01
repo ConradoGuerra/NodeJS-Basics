@@ -11,8 +11,13 @@ const app = express();
 // Importing database with sequelize
 const sequelize = require("./util/database");
 
+//Importing model
 const Product = require("./models/product");
 const User = require("./models/user");
+const Cart = require("./models/cart");
+const CartItem = require("./models/cart-item");
+const Order = require("./models/order");
+const OrderItem = require("./models/order-item");
 
 //Setando no express a template engine EJS como a padrão
 app.set("view engine", "ejs");
@@ -66,9 +71,27 @@ Product.belongsTo(User, { constraints: true, onDelete: "CASCADE" });
 //One user has many products
 User.hasMany(Product)
 
+//A user has one cart
+//This setup will add new id (userid) field to the table cart
+User.hasOne(Cart)
+Cart.belongsTo(User)
+
+//This cart belongs to many products
+//A cart can have many products and a product can have multiple carts
+//The through parameter create in CartItem table the foreing keys CartId and ProductId
+Cart.belongsToMany(Product, {through: CartItem})
+Product.belongsToMany(Cart, {through: CartItem})
+
+//Many orders belong to a user, and many users do not belong to a order
+User.hasMany(Order)
+Order.belongsTo(User)
+
+//Many orders belongs to many products
+Order.belongsToMany(Product, {through: OrderItem})
+
 //Sync is a function to create the tables if they are not created and then connect to server
 .sequelize
-//Force to recriate tables as the sequelize begin
+//The force parameter recriate all tables when sequelize begins 
 // .sync({force: true})
 .sync()
 .then((result) => {
@@ -84,8 +107,11 @@ User.hasMany(Product)
   return user;
 })
 .then((user) => {
+  return user.createCart()
+}).then(cart => {
   //Listen to server
   app.listen(3000);
+  
 })
 .catch((err) => {
   console.log(err);
