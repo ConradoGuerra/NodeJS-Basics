@@ -18,10 +18,12 @@ router.get('/products', adminController.getProducts)
 // /admin/add-product => POST
 router.post('/add-product', adminController.postAddProduct)
 
+//Route for view admin/edit-product
 router.get('/edit-product/:productId', adminController.getEditProduct)
 
+//Route to send data to edit the product
 router.post('/edit-product', adminController.postEditProduct);
 
-router.post('/delete-product', adminController.postDeleteProduct)
+// router.post('/delete-product', adminController.postDeleteProduct)
 
 module.exports = router;

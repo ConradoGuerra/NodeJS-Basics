@@ -1,5 +1,11 @@
 const Product = require("../models/product");
 
+//Importing mongodb
+const mongodb = require('mongodb')
+
+//Importing ObjectId class from mongodb to search product id correctly
+const ObjectId = mongodb.ObjectId
+
 //Controller get para a view add product
 exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
@@ -12,30 +18,23 @@ exports.getAddProduct = (req, res, next) => {
 //Controller post to add product
 exports.postAddProduct = (req, res) => {
   const title = req.body.title;
-  const imageUrl = req.body.imageUrl;
-  const description = req.body.description;
   const price = req.body.price;
-  //As  I declare in app.js that products belongs do user, a product has many users
-  // Now I can use the createProduct method to create a product with userId as foreingKey without expressing that in function
-  req.user
-    //With the sequelize association i can use special methods of associated (products belongs to user)
-    .createProduct({
-      title: title,
-      price: price,
-      imageUrl: imageUrl,
-      description: description,
-    })
+  const description = req.body.description;
+  const imageUrl = req.body.imageUrl;
+
+  const product = new Product(title, price, description, imageUrl);
+  product
+    .save()
     .then((result) => {
-      // console.log(result);
       console.log("Created Product");
-      res.redirect("/");
+      res.redirect("/admin/products");
     })
     .catch((err) => {
       console.log(err);
     });
 };
 
-//Controller get para a view edit product
+//Controller get for view edit product
 exports.getEditProduct = (req, res, next) => {
   //Here we get the param of URL
   const editMode = req.query.edit;
@@ -46,13 +45,9 @@ exports.getEditProduct = (req, res, next) => {
   //Get the param sent with get
   const prodId = req.params.productId;
 
-  //Sequelize association
-  req.user
-    .getProducts({ where: { id: prodId } })
-    //Searching the id findByPk is a method of sequelize to search a register with where clause
-    // Product.findByPk(prodId)
-    .then((products) => {
-      const product = products[0]
+  //Searching the product
+  Product.findById(prodId)
+    .then((product) => {
       if (!product) {
         return res.redirect("/");
       }
@@ -77,15 +72,11 @@ exports.postEditProduct = (req, res, next) => {
   const updatedDescription = req.body.description;
   const updatedPrice = req.body.price;
 
-  Product.findByPk(prodId)
-    .then((product) => {
-      (product.title = updatedTitle),
-        (product.imageUrl = updatedImageUrl),
-        (product.description = updatedDescription),
-        (product.price = updatedPrice);
-      //Returning the update statement
-      return product.save();
-    })
+  //Creating new instance of product to update
+  const product = new Product(updatedTitle, updatedPrice, updatedDescription, updatedImageUrl, new ObjectId(prodId));
+
+  //Calling the method to update
+  product.save()
     //If the save method was succeed
     .then((result) => {
       console.log("Updated Product");
@@ -97,8 +88,8 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  //I only want the products from the exactly user, not all
-  req.user.getProducts()
+  //Get all the products
+  Product.fetchAll()
     .then((products) => {
       res.render("admin/products", {
         prods: products,
@@ -111,17 +102,17 @@ exports.getProducts = (req, res, next) => {
     });
 };
 
-exports.postDeleteProduct = (req, res, next) => {
-  const prodId = req.body.productId;
-  Product.findByPk(prodId)
-    .then((product) => {
-      return product.destroy();
-    })
-    .then((result) => {
-      console.log("Deleted Product");
-      res.redirect("/admin/products");
-    })
-    .catch((err) => {
-      console.log(err);
-    });
-};
+// exports.postDeleteProduct = (req, res, next) => {
+//   const prodId = req.body.productId;
+//   Product.findByPk(prodId)
+//     .then((product) => {
+//       return product.destroy();
+//     })
+//     .then((result) => {
+//       console.log("Deleted Product");
+//       res.redirect("/admin/products");
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//     });
+// };

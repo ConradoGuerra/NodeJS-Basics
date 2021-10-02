@@ -3,7 +3,7 @@ const Product = require("../models/product");
 
 //Controller get to list the products
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  Product.fetchAll()
     .then((products) => {
       res.render("shop/product-list", {
         prods: products,
@@ -19,18 +19,7 @@ exports.getProducts = (req, res, next) => {
 //Controller get, to get the product ID
 exports.getProduct = (req, res, next) => {
   const prodId = req.params.productId;
-  // Product.findAll({ where: { id: prodId } })
-  //   .then((products) => {
-  //     res.render("shop/product-detail", {
-  //       product: products[0],
-  //       pageTitle: products[0].title,
-  //       path: "/products",
-  //     });
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  //   });
-  Product.findByPk(prodId)
+  Product.findById(prodId)
     .then((product) => {
       res.render("shop/product-detail", {
         product: product,
@@ -45,7 +34,7 @@ exports.getProduct = (req, res, next) => {
 
 //Controller get to list the products
 exports.getIndex = (req, res, next) => {
-  Product.findAll()
+  Product.fetchAll()
     .then((products) => {
       res.render("shop/index", {
         prods: products,
