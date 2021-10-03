@@ -6,12 +6,13 @@ const mongodb = require("mongodb");
 
 //Creating the product class
 class Product {
-  constructor(title, price, description, imageUrl, id) {
+  constructor(title, price, description, imageUrl, id, userid) {
     this.title = title;
     this.price = price;
     this.description = description;
     this.imageUrl = imageUrl;
     this._id = id;
+    this.userid = userid;
   }
 
   //Method to create product
@@ -29,8 +30,8 @@ class Product {
         .collection("products")
         //UpdateOne is a single update, first argument is the product id, the second parameter is how to update the document
         //We have to describe the operation with "$set" describing the changes we want to make ($set: this) to update for all parameters
-        //$set: {title: this.title, price: this.price} for specified parameters  
-        .updateOne({ _id: new mongodb.ObjectId(this._id)}, { $set: this });
+        //$set: {title: this.title, price: this.price} for specified parameters
+        .updateOne({ _id: new mongodb.ObjectId(this._id) }, { $set: this });
 
       //If not, then will be created
     } else {
@@ -43,7 +44,7 @@ class Product {
         //This parameter will bring all the parameters I already declared above in the constructor
         .insertOne(this);
     }
-     return dbOp
+    return dbOp
       .then((result) => {
         console.log(result);
       })
@@ -80,6 +81,7 @@ class Product {
       db
         .collection("products")
         //Now I want to find only one product, to do that, I have to call new instance to get id in mongodb, after find, I return the document with next method
+        //Now we convert the string ID to an JS object
         .find({ _id: new mongodb.ObjectId(prodId) })
         .next()
         .then((product) => {
@@ -88,6 +90,19 @@ class Product {
         })
         .catch((err) => console.log(err))
     );
+  }
+
+  //Static Method to delete a product
+  static deleteProduct(prodId) {
+    //Connecting to db
+    const db = getDb();
+
+    //Connecting to the collection products
+    return db.collection("products")
+      //Converting the prodId to an object
+      .deleteOne({ _id: new mongodb.ObjectId(prodId) })
+      .then((result) => console.log("Deleted"))
+      .catch((err) => console.log(err));
   }
 }
 

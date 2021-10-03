@@ -11,6 +11,9 @@ const app = express();
 //Importing mongodb connection
 const mongoConnect= require('./util/database').mongoConnect
 
+//Importing User model
+const User = require('./models/user')
+
 //Setando no express a template engine EJS como a padrão
 app.set("view engine", "ejs");
 
@@ -31,17 +34,16 @@ const errorController = require("./controllers/error");
 
 //Register a new middleware to give the possibility to use User at the intire application
 app.use((req, res, next) => {
-  // User.findByPk(1)
-  //   .then((user) => {
-  //     //Saving the sequelize user (with methods and functions, like create, save, destroy) to store in a request object
-  //     //Now we can use the method user at application
-  //     req.user = user;
-  //     next();
-  //   })
-  //   .catch((err) => {
-  //     console.log(err);
-  //   });
-  next()
+  //Searching the user who has this id
+  User.findById("615a02e3c7ed61e4b21a5843")
+    .then((user) => {
+      //Getting the user document from collection and storing the user in the request
+      req.user = user;
+      next();
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 //O framework body parser está deprecado, mas utilizamos o urlencoded do próprio express.js para decodificar o forumlário enviado

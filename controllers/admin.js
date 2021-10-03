@@ -1,10 +1,10 @@
 const Product = require("../models/product");
 
 //Importing mongodb
-const mongodb = require('mongodb')
+const mongodb = require("mongodb");
 
 //Importing ObjectId class from mongodb to search product id correctly
-const ObjectId = mongodb.ObjectId
+const ObjectId = mongodb.ObjectId;
 
 //Controller get para a view add product
 exports.getAddProduct = (req, res, next) => {
@@ -22,7 +22,15 @@ exports.postAddProduct = (req, res) => {
   const description = req.body.description;
   const imageUrl = req.body.imageUrl;
 
-  const product = new Product(title, price, description, imageUrl);
+  //Creating new instance of product (creating a product)
+  const product = new Product(
+    title,
+    price,
+    description,
+    imageUrl,
+    null,
+    req.user._id
+  );
   product
     .save()
     .then((result) => {
@@ -73,10 +81,17 @@ exports.postEditProduct = (req, res, next) => {
   const updatedPrice = req.body.price;
 
   //Creating new instance of product to update
-  const product = new Product(updatedTitle, updatedPrice, updatedDescription, updatedImageUrl, new ObjectId(prodId));
+  const product = new Product(
+    updatedTitle,
+    updatedPrice,
+    updatedDescription,
+    updatedImageUrl,
+    new ObjectId(prodId)
+  );
 
   //Calling the method to update
-  product.save()
+  product
+    .save()
     //If the save method was succeed
     .then((result) => {
       console.log("Updated Product");
@@ -102,17 +117,15 @@ exports.getProducts = (req, res, next) => {
     });
 };
 
-// exports.postDeleteProduct = (req, res, next) => {
-//   const prodId = req.body.productId;
-//   Product.findByPk(prodId)
-//     .then((product) => {
-//       return product.destroy();
-//     })
-//     .then((result) => {
-//       console.log("Deleted Product");
-//       res.redirect("/admin/products");
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//     });
-// };
+//Controller to delete a product
+exports.postDeleteProduct = (req, res, next) => {
+  const prodId = req.body.productId;
+  deleteProduct(prodId)
+    .then(() => {
+      console.log("Deleted Product");
+      res.redirect("/admin/products");
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+};

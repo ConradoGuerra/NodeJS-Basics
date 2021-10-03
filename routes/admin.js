@@ -19,11 +19,15 @@ router.get('/products', adminController.getProducts)
 router.post('/add-product', adminController.postAddProduct)
 
 //Route for view admin/edit-product
+//View => admin/products
 router.get('/edit-product/:productId', adminController.getEditProduct)
 
 //Route to send data to edit the product
+//View => admin/edit-product
 router.post('/edit-product', adminController.postEditProduct);
 
-// router.post('/delete-product', adminController.postDeleteProduct)
+//Route to delete a product
+//View => admin/products
+router.post('/delete-product', adminController.postDeleteProduct)
 
 module.exports = router;
