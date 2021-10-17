@@ -37,8 +37,8 @@ app.use((req, res, next) => {
   //Searching the user who has this id
   User.findById("615a02e3c7ed61e4b21a5843")
     .then((user) => {
-      //Getting the user document from collection and storing the user in the request
-      req.user = user;
+      //Getting the object from collection and storing the user in the request
+      req.user = new User(user.name, user.email, user.cart, user._id);
       next();
     })
     .catch((err) => {
