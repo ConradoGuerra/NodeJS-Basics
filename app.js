@@ -8,17 +8,14 @@ const path = require("path");
 
 const app = express();
 
-//Importing mongodb connection
-const mongoConnect= require('./util/database').mongoConnect
+//Importing mongoose
+const mongoose = require("mongoose");
 
 //Importing User model
-const User = require('./models/user')
+const User = require("./models/user");
 
 //Setando no express a template engine EJS como a padrão
 app.set("view engine", "ejs");
-
-//Setando no express a template engine pug como a padrão
-// app.set('view engine', 'pug')
 
 //Indicando ao express onde se encontram as views do template engine
 app.set("views", "views");
@@ -35,10 +32,10 @@ const errorController = require("./controllers/error");
 //Register a new middleware to give the possibility to use User at the intire application
 app.use((req, res, next) => {
   //Searching the user who has this id
-  User.findById("615a02e3c7ed61e4b21a5843")
+  User.findById("616c4c2bb354df9224d85473")
     .then((user) => {
-      //Getting the object from collection and storing the user in the request
-      req.user = new User(user.name, user.email, user.cart, user._id);
+      //Assigning to user request the user found by mongoose and its methods
+      req.user = user;
       next();
     })
     .catch((err) => {
@@ -59,10 +56,26 @@ app.use(shopRoutes);
 // //Em caso de página não encontrada
 app.use(errorController.get404);
 
-//Executing the mongo connect to connect to database server
-//Passing a callback that will be executed once we connect to server
-mongoConnect(() => {
-
-  //Executing app.listen to bring the node server
-  app.listen(3000)
-})
+//Connecting to mongo db through mongoose
+mongoose
+  .connect(
+    "mongodb+srv://conrado:262800@cluster0.gpslw.mongodb.net/shop?retryWrites=true&w=majority"
+  )
+  .then((result) => {
+    //Searching if there is a user
+    User.findOne().then(user => {
+      //If not, then will be created one
+      if(!user){
+        //Creating a user with mongoose method
+        const user = new User({
+          name: "Conrado",
+          email: "conrado@concon.com",
+          cart: { items: [] },
+        });
+        user.save();
+      }
+    })
+    //Executing app.listen to bring the node server
+    app.listen(3000);
+  })
+  .catch((err) => console.log(err));
