@@ -26,6 +26,8 @@ const adminRoutes = require("./routes/admin");
 // //importanto a rota do shop.js
 const shopRoutes = require("./routes/shop");
 
+const authRoutes = require('./routes/auth')
+
 // //Importando o error Controller
 const errorController = require("./controllers/error");
 
@@ -52,6 +54,9 @@ app.use(express.static(path.join(__dirname, "public")));
 //Adicionando um caminho como parâmetro da rota
 app.use("/admin/", adminRoutes);
 app.use(shopRoutes);
+
+//Using the auth routes
+app.use(authRoutes)
 
 // //Em caso de página não encontrada
 app.use(errorController.get404);
