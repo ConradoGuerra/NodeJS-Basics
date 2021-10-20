@@ -97,19 +97,6 @@ app.use(errorController.get404);
 mongoose
   .connect(MONGODB_URI)
   .then((result) => {
-    //Searching if there is a user
-    User.findOne().then((user) => {
-      //If not, then will be created one
-      if (!user) {
-        //Creating a user with mongoose method
-        const user = new User({
-          name: "Conrado",
-          email: "conrado@concon.com",
-          cart: { items: [] },
-        });
-        user.save();
-      }
-    });
     //Executing app.listen to bring the node server
     app.listen(3000);
   })

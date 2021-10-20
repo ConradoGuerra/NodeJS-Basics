@@ -10,8 +10,14 @@ const router = express.Router()
 //Connecting the view to controller
 router.get('/login', authController.getLogin)
 
+//Connecting the view signup to controller
+router.get('/signup', authController.getSignup)
+
 //Connecting the view to controller
 router.post('/login', authController.postLogin)
+
+//Connecting the view to controller
+router.post('/signup', authController.postSignup)
 
 //Connecting the view to controller logout
 router.post('/logout', authController.postLogout)
