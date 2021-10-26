@@ -13,6 +13,8 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  resetToken: String,
+  resetTokenExpiration: Date,
   cart: {
     //We can create everything in mongoose object, even documents
     //Here we create in items an array with object that has a productId and the quantity, the productId has the characteristic of mongodb id's

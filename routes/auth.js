@@ -22,4 +22,10 @@ router.post('/signup', authController.postSignup)
 //Connecting the view to controller logout
 router.post('/logout', authController.postLogout)
 
+//Connecting to view reset
+router.get('/reset', authController.getReset)
+
+//Post submit to reset password
+router.post('/reset', authController.postReset)
+
 module.exports = router
