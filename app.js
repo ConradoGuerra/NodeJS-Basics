@@ -11,6 +11,12 @@ const session = require("express-session");
 //Importing mongodb store and passing session to the function which comes with the import
 const MongoDBStore = require("connect-mongodb-session")(session);
 
+//Importing CSRD package
+const csrf = require('csurf')
+
+//Importing connect flash
+const flash = require('connect-flash')
+
 //Importing User model
 const User = require("./models/user");
 
@@ -27,7 +33,9 @@ const store = new MongoDBStore({
   collection: "sessions",
 });
 
-//Setando no express a template engine EJS como a padrão
+//Initializing csrf protection
+const csrfProtection = csrf()
+
 app.set("view engine", "ejs");
 
 //Indicando ao express onde se encontram as views do template engine
@@ -65,6 +73,12 @@ app.use(
   })
 );
 
+//Using the CSRF after the session
+app.use(csrfProtection);
+
+//Initializing flash
+app.use(flash())
+
 //Register a new middleware to give the possibility to use User at the intire application
 app.use((req, res, next) => {
   //If does not exists the user, then call the next middleware
@@ -82,6 +96,17 @@ app.use((req, res, next) => {
       console.log(err);
     });
 });
+
+
+//Creating a local response to send to the views
+app.use((req, res, next) => {
+  //This local variable is for autehtication
+  res.locals.isAuthenticated = req.session.isLoggedIn
+  //This local variable it is to token
+  res.locals.csrfToken = req.csrfToken()
+  next()
+})
+
 
 //Adicionando um caminho como parâmetro da rota
 app.use("/admin/", adminRoutes);
