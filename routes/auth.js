@@ -28,4 +28,10 @@ router.get('/reset', authController.getReset)
 //Post submit to reset password
 router.post('/reset', authController.postReset)
 
-module.exports = router
+//Regiter to new password
+router.get('/reset/:token', authController.getNewPassword)
+
+//Post submit to new password
+router.post('/new-password', authController.postNewPassword)
+
+module.exports = router 

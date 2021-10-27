@@ -5,7 +5,7 @@ exports.getAddProduct = (req, res, next) => {
   res.render("admin/edit-product", {
     pageTitle: "Add Product",
     path: "/admin/add-product",
-    editing: false
+    editing: false,
   });
 };
 
@@ -22,7 +22,7 @@ exports.postAddProduct = (req, res, next) => {
     price: price,
     description: description,
     imageUrl: imageUrl,
-    userId: req.user
+    userId: req.user,
   });
   product
     //Save is a default method from mongoose
@@ -59,7 +59,7 @@ exports.getEditProduct = (req, res, next) => {
         pageTitle: "Edit Product",
         path: "/admin/edit-product",
         editing: editMode,
-        product: product
+        product: product,
       });
     })
     .catch((err) => {
@@ -75,19 +75,22 @@ exports.postEditProduct = (req, res, next) => {
   const updatedPrice = req.body.price;
 
   //Searching for the product with mongoose method
-  Product.findById(prodId).then(product => {
-    //Assigning the updated values to the product found by mongoose method
-    product.title = updatedTitle
-    product.description = updatedDescription
-    product.price = updatedPrice
-    product.imageUrl = updatedImageUrl
-    //With the product class we can use all the mongoose functions
-    return product.save()
-  })
-    //If the save method was succeed
-    .then((result) => {
-      console.log("Updated Product");
-      res.redirect("/admin/products");
+  Product.findById(prodId)
+    .then((product) => {
+      if (product.userId.toString() !== req.user._id.toString()) {
+        return res.redirect("/");
+      }
+      //Assigning the updated values to the product found by mongoose method
+      product.title = updatedTitle;
+      product.description = updatedDescription;
+      product.price = updatedPrice;
+      product.imageUrl = updatedImageUrl;
+      //With the product class we can use all the mongoose functions
+      return product.save().then((result) => {
+        //If the save method was succeed
+        console.log("Updated Product");
+        res.redirect("/admin/products");
+      });
     })
     .catch((err) => {
       console.log(err);
@@ -96,17 +99,17 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
   //Get all the products with mongoose method
-  Product.find()
+  Product.find({ userId: req.user._id })
     // //I can select witch field to display
     // .select('title price -_id')
     // //And i can select the fields of the related document
     // .populate('userId', 'name')
     .then((products) => {
-      console.log(products)
+      console.log(products);
       res.render("admin/products", {
         prods: products,
         pageTitle: "Admin Products",
-        path: "/admin/products"
+        path: "/admin/products",
       });
     })
     .catch((err) => {
@@ -118,7 +121,7 @@ exports.getProducts = (req, res, next) => {
 exports.postDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
   //Delete a product with mongoose method
-  Product.findByIdAndDelete(prodId)
+  Product.deleteOne({_id: prodId, userId: req.user._id})
     .then(() => {
       console.log("Deleted Product");
       res.redirect("/admin/products");
