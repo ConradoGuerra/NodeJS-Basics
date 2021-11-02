@@ -1,9 +1,9 @@
 //Importing User model
 const User = require("../models/user");
-
 const nodemailer = require("nodemailer");
-
 const sendGridTransport = require("nodemailer-sendgrid-transport");
+//Validation Result allow to gather all the erros prior to validation check stored
+const { validationResult } = require("express-validator");
 
 //Sendgridtransport create a configuration that nodemailer can use sendgrid
 const transporter = nodemailer.createTransport(
@@ -36,6 +36,11 @@ exports.getLogin = (req, res, next) => {
     path: "/login",
     pageTitle: "Login",
     errorMessage: message,
+    oldLogin: {
+      email: '',
+      password: ''
+    },
+    validationErrors: []
   });
 };
 
@@ -52,6 +57,12 @@ exports.getSignup = (req, res, next) => {
     path: "/signup",
     pageTitle: "Signup",
     errorMessage: message,
+    oldSignup: {
+      email: '',
+      password: '',
+      confirmPassword: ''
+    },
+    validationErrors: []
   });
 };
 
@@ -59,15 +70,40 @@ exports.postLogin = (req, res, next) => {
   //Extracting the user's email and password
   const email = req.body.email;
   const password = req.body.password;
+    //We are extracting the error from the middleware function check, in the post login route, getting the request as argument
+    const errors = validationResult(req);
+    //If errors is not empty
+    if (!errors.isEmpty()) {
+      //This status is for validation error
+      return res.status(422).render("auth/login", {
+        path: "/login",
+        pageTitle: "login",
+        errorMessage: errors.array()[0].msg,
+        oldLogin: {
+          email: email,
+          password: password
+        },
+        //Sending to view the error as an array
+        validationErrors: errors.array()
+      });
+    }
   //Searching for the user by its email
   User.findOne({ email: email })
     .then((user) => {
       //If the user does not exist, then will be redirect to login
       if (!user) {
-        //Flashing an erro message if the user does not exist
-        //The flash takes two arguments, first the name of message and the second is the message
-        req.flash("error", "Invalid e-mail or password");
-        return res.redirect("/login");
+        //This status is for validation error
+        return res.status(422).render("auth/login", {
+          path: "/login",
+          pageTitle: "login",
+          errorMessage: 'Invalid e-mail or password',
+          oldLogin: {
+            email: email,
+            password: password
+          },
+          //Sending to view the error as an array
+          validationErrors: []
+        });
       }
       //If exists, then the passwords will be compared if match
       bcryptjs.compare(password, user.password).then((doMatch) => {
@@ -83,8 +119,24 @@ exports.postLogin = (req, res, next) => {
             res.redirect("/");
           });
         }
+        
+        //This status is for validation error
+        return res.status(422).render("auth/login", {
+          path: "/login",
+          pageTitle: "login",
+          errorMessage: 'Invalid e-mail or password',
+          oldLogin: {
+            email: email,
+            password: password
+          },
+          //Sending to view the error as an array
+          validationErrors: []
+        })
         //If passwords do not matches
-        res.redirect("/login");
+        .catch((err) => {
+          res.redirect("/login");
+          console.log(err);
+        });
       });
     })
     .catch((err) => {
@@ -96,43 +148,50 @@ exports.postSignup = (req, res, next) => {
   //Getting the e-mail and password from signup page
   const email = req.body.email;
   const password = req.body.password;
-  const confirmpassword = req.body.confirmpassword;
+  const confirmPassword = req.body.confirmPassword;
+  //We are extracting the error from the middleware function check, in the post signup route, getting the request as argument
+  const errors = validationResult(req);
+  //If errors is not empty
+  if (!errors.isEmpty()) {
+    console.log(errors.array())
+    //This status is for validation error
+    return res.status(422).render("auth/signup", {
+      path: "/signup",
+      pageTitle: "Signup",
+      errorMessage: errors.array()[0].msg,
+      oldSignup: {
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword
+      },
+      //Sending as object the array of erros to use at the view
+      validationErrors: errors.array()
+    });
+  }
+  //If not, we will encript (hash) the password, the second argument is the number of rounds of encription
+  bcryptjs
+    .hash(password, 12)
+    //Saving the user with hashedPassword in mongodb
+    .then((hashedPassword) => {
+      const user = new User({
+        email: email,
+        password: hashedPassword,
+        cart: { items: [] },
+      });
+      return user
+        .save()
+        .then((result) => {
+          res.redirect("/login");
 
-  //Searching if the user exists
-  User.findOne({ email: email })
-    .then((userDoc) => {
-      //If exists, then just redirect it to login
-      if (userDoc) {
-        req.flash("error", "E-mail already exists.");
-        return res.redirect("/login");
-      }
-      //If not, we will encript (hash) the password, the second argument is the number of rounds of encription
-      return (
-        bcryptjs
-          .hash(password, 12)
-          //Saving the user with hashedPassword in mongodb
-          .then((hashedPassword) => {
-            const user = new User({
-              email: email,
-              password: hashedPassword,
-              cart: { items: [] },
-            });
-            return user
-              .save()
-              .then((result) => {
-                res.redirect("/login");
-
-                //Sending an email
-                return transporter.sendMail({
-                  to: email,
-                  from: "conradoguerra@gmail.com",
-                  subject: "Signup succeeded",
-                  html: "<h1>You successfully signup!</h1>",
-                });
-              })
-              .catch((err) => console.log(err));
-          })
-      );
+          //Sending an email
+          return transporter.sendMail({
+            to: email,
+            from: "conradoguerra@gmail.com",
+            subject: "Signup succeeded",
+            html: "<h1>You successfully signup!</h1>",
+          });
+        })
+        .catch((err) => console.log(err));
     })
     .catch((err) => console.log(err));
 };
