@@ -79,6 +79,15 @@ app.use(csrfProtection);
 //Initializing flash
 app.use(flash())
 
+//Creating a local response to send to the views
+app.use((req, res, next) => {
+  //This local variable is for autehtication
+  res.locals.isAuthenticated = req.session.isLoggedIn
+  //This local variable is for the token
+  res.locals.csrfToken = req.csrfToken()
+  next()
+})
+
 //Register a new middleware to give the possibility to use User at the intire application
 app.use((req, res, next) => {
   //If does not exists the user, then call the next middleware
@@ -88,25 +97,20 @@ app.use((req, res, next) => {
   //Searching the user who has this id
   User.findById(req.session.user._id)
     .then((user) => {
+      //If the user doesnt exist in mongodb
+      if(!user){
+        return next()
+      }
       //Assigning to user request the user found by mongoose and its methods
       req.user = user;
       next();
     })
+    //If we have a technical issue, we throw an error
     .catch((err) => {
-      console.log(err);
+      //Inside of middleware we have to call next with error to throw an error, this next call the middleware error
+      next(new Error(err))
     });
 });
-
-
-//Creating a local response to send to the views
-app.use((req, res, next) => {
-  //This local variable is for autehtication
-  res.locals.isAuthenticated = req.session.isLoggedIn
-  //This local variable it is to token
-  res.locals.csrfToken = req.csrfToken()
-  next()
-})
-
 
 //Adicionando um caminho como parâmetro da rota
 app.use("/admin/", adminRoutes);
@@ -115,8 +119,22 @@ app.use(shopRoutes);
 //Using the auth routes
 app.use(authRoutes);
 
-// //Em caso de página não encontrada
+// Technical error render
+app.get('/500', errorController.get500);
+
+// Page not found error render
 app.use(errorController.get404);
+
+//Error middleware is a special middleware that receives priority if an error occurs
+app.use((error, req, res, next) => {
+  res
+    .status(500)
+    .render("500", {
+      pageTitle: "Error!",
+      path: "/500",
+      isAuthenticated: req.session.isLoggedIn,
+    });
+})
 
 //Connecting to mongo db through mongoose
 mongoose
