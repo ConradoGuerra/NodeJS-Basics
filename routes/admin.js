@@ -10,6 +10,7 @@ const adminController = require("../controllers/admin");
 
 const isAuth = require("../middleware/is-auth");
 
+
 // //Procurando o caminho da view, já com o diretório raiz padronizado
 // // /admin/add-product => GET
 router.get("/add-product", isAuth, adminController.getAddProduct);
@@ -24,7 +25,6 @@ router.post(
   "/add-product",
   [
     body("title", "Invalid title").isString().isLength({ min: 3 }).trim(),
-    body("imageUrl", "Invalid imageUrl").isURL(),
     body("price", "Invalid price").isFloat(),
     body("description", "Invalid description").isLength({ min: 5 }).trim(),
   ],
@@ -42,7 +42,6 @@ router.post(
   "/edit-product",
   [
     body("title", "Invalid title").isString().isLength({ min: 3 }).trim(),
-    body("imageUrl", "Invalid imageUrl").isURL(),
     body("price", "Invalid price").isFloat(),
     body("description", "Invalid description").isLength({ min: 5 }).trim(),
   ],

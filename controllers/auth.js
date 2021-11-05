@@ -134,8 +134,8 @@ exports.postLogin = (req, res, next) => {
         })
         //If passwords do not matches
         .catch((err) => {
-          res.redirect("/login");
           console.log(err);
+          res.redirect("/login");
         });
       });
     })
@@ -254,12 +254,12 @@ exports.postReset = (req, res, next) => {
         //Setting the token expiration to 1 hour after the email was sented
         user.resetTokenExpiration = Date.now() + 3600000;
         //Update in the user database
-        user.save();
+        return user.save();
       })
       .then((result) => {
         res.redirect("/login");
         //Sending an email
-        return transporter.sendMail({
+         transporter.sendMail({
           //Getting the email that exists
           to: req.body.email,
           from: "conradoguerra@gmail.com",
