@@ -225,8 +225,9 @@ exports.getProducts = (req, res, next) => {
 };
 
 //Controller to delete a product
-exports.postDeleteProduct = (req, res, next) => {
-  const prodId = req.body.productId;
+exports.deleteProduct = (req, res, next) => {
+  //Getting the parameter of view
+  const prodId = req.params.productId;
   Product.findById(prodId)
     .then((product) => {
       if (!product) {
@@ -236,12 +237,10 @@ exports.postDeleteProduct = (req, res, next) => {
       return Product.deleteOne({ _id: prodId, userId: req.user._id });
     })
     .then(() => {
-      console.log("Deleted Product");
-      res.redirect("/admin/products");
+      console.log('Product Deleted')
+      res.status(200).json({message: 'Product Deleted'})
     })
     .catch((err) => {
-      const error = new Error(err);
-      error.httpStatusCode = 500;
-      return next(error);
+      res.status(500).json({message: 'Deleting product failed'})
     });
 };
