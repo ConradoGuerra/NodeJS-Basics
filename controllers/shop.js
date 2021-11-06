@@ -4,20 +4,40 @@ const fs = require("fs");
 const path = require("path");
 const PDFDocument = require("pdfkit");
 
+const ITEMS_PER_PAGE = 1;
+
 exports.getProducts = (req, res, next) => {
+  //Getting the query parammeters sent from view, if there isn't a parameter, then will be one
+  const page = +req.query.page || 1;
+  let totalItems;
   //Find is a built-in mongoose method to search
   Product.find()
+    //Couting the number of documents in mongodb
+    .countDocuments()
+    .then((numProducts) => {
+      totalItems = numProducts;
+      return (
+        Product.find()
+          //Send to mongoose to skip the items of the page less one
+          .skip((page - 1) * ITEMS_PER_PAGE)
+          //Limit to show just 2 items per page
+          .limit(ITEMS_PER_PAGE)
+      );
+    })
     .then((products) => {
       res.render("shop/product-list", {
         prods: products,
-        pageTitle: "All Products",
+        pageTitle: "Products",
         path: "/products",
+        currentPage: page,
+        //Checking if exists nextPage
+        hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+        //Checking if exists previous page
+        hasPreviousPage: page > 1,
+        nextPage: page + 1,
+        previousPage: page - 1,
+        lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
       });
-    })
-    .catch((err) => {
-      const error = new Error(err);
-      error.httpStatusCode = 500;
-      return next(error);
     });
 };
 
@@ -40,13 +60,36 @@ exports.getProduct = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
+  //Getting the query parammeters sent from view, if there isn't a parameter, then will be one
+  const page = +req.query.page || 1;
+  let totalItems;
   //Find is a built-in mongoose method to search
   Product.find()
+    //Couting the number of documents in mongodb
+    .countDocuments()
+    .then((numProducts) => {
+      totalItems = numProducts;
+      return (
+        Product.find()
+          //Send to mongoose to skip the items of the page less one
+          .skip((page - 1) * ITEMS_PER_PAGE)
+          //Limit to show just 2 items per page
+          .limit(ITEMS_PER_PAGE)
+      );
+    })
     .then((products) => {
       res.render("shop/index", {
         prods: products,
         pageTitle: "Shop",
         path: "/",
+        currentPage: page,
+        //Checking if exists nextPage
+        hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+        //Checking if exists previous page
+        hasPreviousPage: page > 1,
+        nextPage: page + 1,
+        previousPage: page - 1,
+        lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
       });
     })
     .catch((err) => {
@@ -184,17 +227,19 @@ exports.getInvoice = (req, res, next) => {
       let totalPrice = 0;
       order.products.forEach((prod) => {
         totalPrice += prod.product.price * prod.quantity;
-        pdfDoc.fontSize(14).text(
-          prod.product.title +
-            " - " +
-            "qty: " +
-            prod.quantity +
-            " $" +
-            prod.product.price
-        );
+        pdfDoc
+          .fontSize(14)
+          .text(
+            prod.product.title +
+              " - " +
+              "qty: " +
+              prod.quantity +
+              " $" +
+              prod.product.price
+          );
       });
-      pdfDoc.text('-------------------------------')
-      pdfDoc.fontSize(16).text('Total Price: $' +totalPrice)
+      pdfDoc.text("-------------------------------");
+      pdfDoc.fontSize(16).text("Total Price: $" + totalPrice);
       pdfDoc.end();
       // //Reading the file of the invoice
       // fs.readFile(invoicePath, (err, data) => {
