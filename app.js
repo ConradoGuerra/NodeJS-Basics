@@ -20,7 +20,8 @@ const User = require("./models/user");
 const multer = require("multer");
 
 const MONGODB_URI =
-  "mongodb+srv://conrado:262800@cluster0.gpslw.mongodb.net/shop";
+  //process.env is object that give all environment variable access
+  `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.gpslw.mongodb.net/${process.env.MONGO_DATABASE}`;
 
 const app = express();
 
@@ -168,6 +169,6 @@ mongoose
   .connect(MONGODB_URI)
   .then((result) => {
     //Executing app.listen to bring the node server
-    app.listen(3000);
+    app.listen(process.env.PORT || 3000);
   })
   .catch((err) => console.log(err));
