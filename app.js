@@ -1,6 +1,8 @@
 // importando o módulo express
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
+const https = require('https')
 //Importing mongoose
 const mongoose = require("mongoose");
 //Importing session
@@ -15,6 +17,9 @@ const flash = require("connect-flash");
 const errorController = require("./controllers/error");
 //Importing User model
 const User = require("./models/user");
+const helmet = require("helmet");
+const compression = require("compression");
+const morgan = require("morgan");
 
 //Importing multer
 const multer = require("multer");
@@ -36,7 +41,9 @@ const store = new MongoDBStore({
 //Initializing csrf protection
 const csrfProtection = csrf();
 
-
+//The fileSync function will block the code until it's done
+const privateKey = fs.readFileSync('server.key')
+const certificate = fs.readFileSync('server.cert')
 
 //Storage engine of multer to config how the file will be stored in the system
 const fileStorage = multer.diskStorage({
@@ -50,7 +57,6 @@ const fileStorage = multer.diskStorage({
     cb(null, Date.now() + "-" + file.originalname);
   },
 });
-
 
 app.set("view engine", "ejs");
 //Indicando ao express onde se encontram as views do template engine
@@ -69,10 +75,24 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+//Creating a file to log
+const accessLogStream = fs.createWriteStream(
+  //Will be create in the root directory
+  path.join(__dirname, "access.log"),
+  //Flags to a means that will always be created new data, not overwrited
+  { flags: "a" }
+);
+
 // //importando a rota do admin.js
 const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 const authRoutes = require("./routes/auth");
+//Using helmet for headers
+app.use(helmet());
+//Using compression to compressing the page
+app.use(compression());
+//Using morgan as an request/resposne logging
+app.use(morgan("combined", {stream: accessLogStream}));
 
 //O framework body parser está deprecado, mas utilizamos o urlencoded do próprio express.js para decodificar o forumlário enviado
 app.use(express.urlencoded({ extended: true }));
@@ -168,6 +188,8 @@ app.use((error, req, res, next) => {
 mongoose
   .connect(MONGODB_URI)
   .then((result) => {
+    //Create a server with the privateKey and certificate
+    // https.createServer({key: privateKey, cert: certificate}, app).listen(process.env.PORT || 3000);
     //Executing app.listen to bring the node server
     app.listen(process.env.PORT || 3000);
   })
