@@ -42,8 +42,8 @@ const store = new MongoDBStore({
 const csrfProtection = csrf();
 
 //The fileSync function will block the code until it's done
-const privateKey = fs.readFileSync('server.key')
-const certificate = fs.readFileSync('server.cert')
+// const privateKey = fs.readFileSync('server.key')
+// const certificate = fs.readFileSync('server.cert')
 
 //Storage engine of multer to config how the file will be stored in the system
 const fileStorage = multer.diskStorage({
